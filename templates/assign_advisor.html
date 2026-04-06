@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>Assign Faculty Advisor to Students</h2>
+
+<hr>
+
+<div style="background-color: #e3f2fd; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+    <p style="margin: 0;">
+        <strong>📝 Instructions:</strong> Select a department, choose filters (optional), then select an advisor to assign to multiple students.
+    </p>
+</div>
+
+<form method="POST" action="/admin/get-students-for-advisor" id="filterForm">
+
+<!-- STEP 1: SELECT DEPARTMENT -->
+<fieldset style="border: 2px solid #2196F3; padding: 20px; margin-bottom: 20px; border-radius: 5px;">
+<legend style="padding: 0 10px; font-weight: bold; font-size: 14px; color: #2196F3;">Step 1: Select Department</legend>
+
+Department<br>
+<select name="department_id" id="department" required onchange="loadAdvisors()" style="width: 100%; padding: 12px; margin-bottom: 10px; box-sizing: border-box; font-size: 14px;">
+    <option value="">-- Select Department --</option>
+    {% for dept in departments %}
+        <option value="{{ dept[0] }}">{{ dept[1] }}</option>
+    {% endfor %}
+</select>
+
+</fieldset>
+
+<!-- STEP 2: SELECT ADVISOR (populated after department selection) -->
+<fieldset style="border: 2px solid #4CAF50; padding: 20px; margin-bottom: 20px; border-radius: 5px;">
+<legend style="padding: 0 10px; font-weight: bold; font-size: 14px; color: #4CAF50;">Step 2: Select Advisor from Department</legend>
+
+<p style="color: #666; font-size: 14px;">Available Advisors:</p>
+
+Faculty Advisor<br>
+<select name="faculty_id" id="advisorSelect" required style="width: 100%; padding: 12px; margin-bottom: 10px; box-sizing: border-box; font-size: 14px;">
+    <option value="">-- Select an Advisor --</option>
+</select>
+
+<div id="advisorInfo" style="margin-top: 10px; padding: 10px; background-color: #f0f0f0; border-radius: 5px; display: none;">
+    <p id="selectedAdvisor" style="margin: 0;"></p>
+</div>
+
+</fieldset>
+
+<!-- STEP 3: OPTIONAL FILTERS -->
+<fieldset style="border: 2px solid #FF9800; padding: 20px; margin-bottom: 20px; border-radius: 5px;">
+<legend style="padding: 0 10px; font-weight: bold; font-size: 14px; color: #FF9800;">Step 3: Filter Students (Optional)</legend>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+
+<div>
+    Year<br>
+    <input type="number" name="year" id="year" placeholder="e.g., 2025" min="2020" max="2099" style="width: 100%; padding: 12px; box-sizing: border-box; font-size: 14px;"><br>
+    <small style="color: #666;">Leave empty to show all years</small>
+</div>
+
+<div>
+    Session<br>
+    <select name="session_type" id="session" style="width: 100%; padding: 12px; box-sizing: border-box; font-size: 14px;">
+        <option value="">Any Session</option>
+        <option value="Winter">Winter</option>
+        <option value="Summer">Summer</option>
+    </select>
+    <small style="color: #666;">Leave empty to show all sessions</small>
+</div>
+
+</div>
+
+</fieldset>
+
+<!-- SUBMIT BUTTON -->
+<div style="text-align: center;">
+    <button type="submit" id="loadBtn" disabled style="padding: 12px 40px; background-color: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold;">
+        Load Students
+    </button>
+</div>
+
+</form>
+
+<script>
+
+function loadAdvisors() {
+    var deptId = document.getElementById("department").value;
+    var advisorSelect = document.getElementById("advisorSelect");
+    var loadBtn = document.getElementById("loadBtn");
+    
+    if (!deptId) {
+        advisorSelect.innerHTML = '<option value="">-- Select an Advisor --</option>';
+        loadBtn.disabled = true;
+        return;
+    }
+    
+    // Fetch advisors for selected department
+    fetch(`/admin/get-advisors-by-department?department_id=${deptId}`)
+        .then(response => response.text())
+        .then(html => {
+            advisorSelect.innerHTML = html;
+            loadBtn.disabled = false;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            advisorSelect.innerHTML = '<option value="">Error loading advisors</option>';
+        });
+}
+
+document.getElementById("advisorSelect").addEventListener("change", function() {
+    var selectedOption = this.options[this.selectedIndex];
+    var advisorInfo = document.getElementById("advisorInfo");
+    
+    if (this.value) {
+        document.getElementById("selectedAdvisor").textContent = "✓ Selected: " + selectedOption.text;
+        advisorInfo.style.display = "block";
+    } else {
+        advisorInfo.style.display = "none";
+    }
+});
+
+</script>
+
+{% endblock %}

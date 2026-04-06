@@ -1,0 +1,4 @@
+DB_USER = "STD_DB"
+DB_PASSWORD = "1234"
+DB_DSN = "localhost/XEPDB1"
+SECRET_KEY = "secret123"

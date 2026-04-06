@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>Set Lectures First</h2>
+
+<hr>
+
+<div style="background-color: #ffcdd2; padding: 20px; border-radius: 5px; margin: 20px 0; text-align: center;">
+    <h3 style="color: #c62828; margin-top: 0;">⚠️ No Lectures Set</h3>
+    <p style="font-size: 16px; margin: 10px 0;">
+        You must set the total number of lectures for <strong>{{ course[1] }}</strong> before marking attendance.
+    </p>
+</div>
+
+<div style="background-color: #fff3e0; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+    <p style="margin: 0; color: #666;">
+        Click below to set the total lectures held in this session.
+    </p>
+</div>
+
+<br>
+
+<div style="text-align: center;">
+    <a href="/faculty/course/{{ sem_course_id }}/set-lectures"><button style="padding: 12px 40px; background-color: #FF9800; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; margin-right: 10px;">
+        🔧 Set Lectures
+    </button></a>
+    
+    <a href="/faculty/dashboard"><button style="padding: 12px 40px; background-color: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold;">
+        Back to Dashboard
+    </button></a>
+</div>
+
+{% endblock %}

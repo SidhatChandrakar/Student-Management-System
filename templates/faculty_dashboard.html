@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>Faculty Dashboard</h2>
+
+<hr>
+
+<div style="background-color: #e3f2fd; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+    <p style="margin: 0;">
+        <strong>📚 My Courses:</strong> You are teaching {{ courses|length }} course(s) this semester.
+    </p>
+</div>
+
+{% if courses %}
+
+<table border="1" style="width: 100%; border-collapse: collapse;">
+
+<tr style="background-color: #f0f0f0; font-weight: bold;">
+<th style="padding: 10px;">Course Code</th>
+<th style="padding: 10px;">Course Name</th>
+<th style="padding: 10px;">Active Students</th>
+<th style="padding: 10px;">Actions</th>
+</tr>
+
+{% for c in courses %}
+
+<tr>
+<td style="padding: 10px;">{{c[1]}}</td>
+<td style="padding: 10px;">{{c[2]}}</td>
+<td style="padding: 10px; text-align: center;">
+    <span style="background-color: #e3f2fd; padding: 5px 10px; border-radius: 5px;">{{c[3]}}</span>
+</td>
+<td style="padding: 10px;">
+    <a href="/faculty/course/{{c[0]}}" style="color: #2196F3; text-decoration: none; margin-right: 10px; font-weight: bold;">
+        View Students
+    </a>
+    |
+    <a href="/faculty/course/{{c[0]}}/set-lectures" style="color: #FF9800; text-decoration: none; margin: 0 10px; font-weight: bold;">
+        Set Lectures
+    </a>
+    |
+    <a href="/faculty/course/{{c[0]}}/attendance" style="color: #4CAF50; text-decoration: none; margin-left: 10px; font-weight: bold;">
+        Mark Attendance
+    </a>
+</td>
+</tr>
+
+{% endfor %}
+
+</table>
+
+{% else %}
+
+<p style="color: #999; font-style: italic; text-align: center;">No courses assigned for this semester.</p>
+
+{% endif %}
+
+{% endblock %}

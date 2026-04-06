@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>Manage Attendance</h2>
+
+<hr>
+
+<div style="background-color: #f9f9f9; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
+
+<h3 style="margin-top: 0;">Student Information</h3>
+
+<p><strong>Student ID:</strong> {{ attendance_info[0] }}</p>
+<p><strong>Student Name:</strong> {{ attendance_info[1] }}</p>
+<p><strong>Course:</strong> {{ attendance_info[2] }} - {{ attendance_info[3] }}</p>
+
+<hr>
+
+<h3>Current Attendance</h3>
+
+<p><strong>Total Lectures:</strong> {{ attendance_info[5] }}</p>
+<p><strong>Present:</strong> {{ attendance_info[6] }}</p>
+
+{% if attendance_info[5] > 0 %}
+    {% set att_percentage = (attendance_info[6] * 100 / attendance_info[5])|int %}
+    {% if att_percentage >= 75 %}
+        <p><strong>Attendance %:</strong> <span style="color: #2e7d32; font-weight: bold;">{{ att_percentage }}%</span></p>
+    {% elif att_percentage >= 60 %}
+        <p><strong>Attendance %:</strong> <span style="color: #f57c00; font-weight: bold;">{{ att_percentage }}%</span></p>
+    {% else %}
+        <p><strong>Attendance %:</strong> <span style="color: #c62828; font-weight: bold;">{{ att_percentage }}%</span></p>
+    {% endif %}
+{% endif %}
+
+</div>
+
+<hr>
+
+<h3>Update Attendance</h3>
+
+<form method="POST" action="/faculty/attendance/{{ attendance_info[4] }}">
+
+<div style="background-color: #f0f0f0; padding: 20px; border-radius: 5px;">
+
+<label for="total_lectures" style="font-weight: bold; display: block; margin-bottom: 5px;">
+    Total Lectures in This Month:
+</label>
+<input type="number" name="total_lectures" id="total_lectures" required min="0" max="31" value="{{ attendance_info[5] }}" style="width: 100%; padding: 10px; margin-bottom: 20px; box-sizing: border-box; font-size: 14px;"><br>
+
+<label for="present_count" style="font-weight: bold; display: block; margin-bottom: 5px;">
+    Number of Lectures Present:
+</label>
+<input type="number" name="present_count" id="present_count" required min="0" max="31" value="{{ attendance_info[6] }}" onchange="validateAttendance()" style="width: 100%; padding: 10px; margin-bottom: 10px; box-sizing: border-box; font-size: 14px;"><br>
+
+<div id="validationMessage" style="font-size: 12px; margin-bottom: 20px;"></div>
+
+</div>
+
+<br>
+
+<div style="text-align: center;">
+    <button type="submit" style="padding: 12px 40px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; margin-right: 10px;">
+        ✓ Save Attendance
+    </button>
+    
+    <button type="button" onclick="history.back()" style="padding: 12px 40px; background-color: #f44336; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold;">
+        ✕ Cancel
+    </button>
+</div>
+
+<input type="hidden" name="sem_course_id" id="sem_course_id">
+
+</form>
+
+<script>
+
+function validateAttendance() {
+    var total = parseInt(document.getElementById("total_lectures").value) || 0;
+    var present = parseInt(document.getElementById("present_count").value) || 0;
+    var message = document.getElementById("validationMessage");
+    
+    if (present > total) {
+        message.innerHTML = "❌ Present count cannot be greater than total lectures";
+        message.style.color = "#c62828";
+    } else if (total > 0) {
+        var percentage = ((present * 100) / total).toFixed(1);
+        message.innerHTML = "✓ Attendance: " + percentage + "%";
+        
+        if (percentage >= 75) {
+            message.style.color = "#2e7d32";
+        } else if (percentage >= 60) {
+            message.style.color = "#f57c00";
+        } else {
+            message.style.color = "#c62828";
+        }
+    } else {
+        message.innerHTML = "";
+    }
+}
+
+// Validate on page load
+window.onload = function() {
+    validateAttendance();
+};
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>Total Lectures Set Successfully</h2>
+
+<hr>
+
+<div style="background-color: #c8e6c9; padding: 20px; border-radius: 5px; margin: 20px 0; text-align: center;">
+    <h3 style="color: #2e7d32; margin-top: 0;">✓ Success!</h3>
+    <p style="font-size: 18px; margin: 10px 0;">
+        Total lectures for <strong>{{ course[1] }}</strong> is set to <strong style="color: #1976d2;">{{ total_lectures }}</strong>
+    </p>
+</div>
+
+<div style="background-color: #e8f5e9; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+    <h4 style="margin-top: 0; color: #2e7d32;">📝 Next Step</h4>
+    <p style="margin: 0; font-size: 14px;">
+        Now you can mark attendance for each student by entering the number of lectures they were present for.
+    </p>
+</div>
+
+<hr>
+
+<div style="text-align: center; margin: 30px 0;">
+    <a href="/faculty/course/{{ sem_course_id }}/attendance"><button style="padding: 12px 40px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin-right: 10px; font-weight: bold;">
+        ➡️ Mark Attendance
+    </button></a>
+    
+    <a href="/faculty/dashboard"><button style="padding: 12px 40px; background-color: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold;">
+        📚 Back to Dashboard
+    </button></a>
+</div>
+
+{% endblock %}

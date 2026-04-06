@@ -1,0 +1,58 @@
+<form method="POST" action="/login">
+
+Role
+<select name="role" id="role" onchange="toggleSession()">
+<option value="student">Student</option>
+<option value="faculty">Faculty</option>
+<option value="advisor">Advisor</option>
+<option value="admin">Admin</option>
+</select>
+
+<br><br>
+
+User ID
+<input type="text" name="user_id">
+
+<br><br>
+
+Password
+<input type="password" name="password">
+
+<div id="semester_fields">
+
+<br>
+Session
+<select name="session">
+<option value="Winter">Winter</option>
+<option value="Summer">Summer</option>
+</select>
+
+<br><br>
+
+Year
+<input type="number" name="year" value="2025">
+
+</div>
+
+<br><br>
+
+<button type="submit">Login</button>
+
+</form>
+
+<script>
+
+function toggleSession() {
+
+    var role = document.getElementById("role").value
+    var sem = document.getElementById("semester_fields")
+
+    if(role === "student"){
+        sem.style.display = "block"
+    } else {
+        sem.style.display = "none"
+    }
+
+}
+
+</script>

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>Faculty Advisor Assignments</h2>
+
+<hr>
+
+{% if assignments %}
+
+<div style="overflow-x: auto;">
+
+<table border="1" style="width: 100%; border-collapse: collapse;">
+
+<tr style="background-color: #f0f0f0; font-weight: bold;">
+<th style="padding: 10px;">Advisor Name</th>
+<th style="padding: 10px;">Email</th>
+<th style="padding: 10px;">Department</th>
+<th style="padding: 10px;">Students Assigned</th>
+<th style="padding: 10px;">Action</th>
+</tr>
+
+{% for assignment in assignments %}
+
+<tr>
+<td style="padding: 10px;">{{ assignment[1] }}</td>
+<td style="padding: 10px;">{{ assignment[2] }}</td>
+<td style="padding: 10px;">{{ assignment[4] if assignment|length > 4 else 'N/A' }}</td>
+<td style="padding: 10px; text-align: center;">
+    <span style="background-color: #e3f2fd; padding: 5px 10px; border-radius: 5px;">{{ assignment[3] }}</span>
+</td>
+<td style="padding: 10px;">
+    <a href="/admin/advisor-details/{{ assignment[0] }}" style="color: #2196F3; text-decoration: none; font-weight: bold;">
+        View Details →
+    </a>
+</td>
+</tr>
+
+{% endfor %}
+
+</table>
+
+</div>
+
+{% else %}
+
+<p style="color: #999; font-style: italic; text-align: center;">No advisor assignments found.</p>
+
+{% endif %}
+
+<br>
+
+<div style="text-align: center;">
+    <a href="/admin/assign-advisor"><button style="padding: 12px 30px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">
+        Assign New Advisor
+    </button></a>
+</div>
+
+{% endblock %}

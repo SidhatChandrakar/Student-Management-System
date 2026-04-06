@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>Manage Student Grade</h2>
+
+<hr>
+
+<div style="background-color: #f9f9f9; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
+
+<h3 style="margin-top: 0;">Student Information</h3>
+
+<p><strong>Student ID:</strong> {{ result_info[0] }}</p>
+<p><strong>Student Name:</strong> {{ result_info[1] }}</p>
+<p><strong>Course:</strong> {{ result_info[2] }} - {{ result_info[3] }}</p>
+
+<hr>
+
+<h3>Current Grade</h3>
+
+<p><strong>Grade:</strong> 
+{% if result_info[6] %}
+    <span style="background-color: #e3f2fd; padding: 5px 10px; border-radius: 5px; font-weight: bold; color: #1976d2;">
+        {{ result_info[6] }}
+    </span>
+{% else %}
+    <span style="color: #f57c00;">Not Graded</span>
+{% endif %}
+</p>
+
+</div>
+
+<hr>
+
+<h3>Grading System</h3>
+
+<div style="background-color: #f0f0f0; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+
+<table border="1" style="width: 100%; border-collapse: collapse;">
+
+<tr style="background-color: #e3f2fd; font-weight: bold;">
+<th style="padding: 10px;">Grade</th>
+<th style="padding: 10px;">Points</th>
+<th style="padding: 10px;">Performance</th>
+</tr>
+
+<tr>
+<td style="padding: 10px;"><strong>AA</strong></td>
+<td style="padding: 10px; text-align: center;">10</td>
+<td style="padding: 10px; color: #2e7d32;">Excellent</td>
+</tr>
+
+<tr>
+<td style="padding: 10px;"><strong>AB</strong></td>
+<td style="padding: 10px; text-align: center;">9</td>
+<td style="padding: 10px; color: #2e7d32;">Very Good</td>
+</tr>
+
+<tr>
+<td style="padding: 10px;"><strong>BB</strong></td>
+<td style="padding: 10px; text-align: center;">8</td>
+<td style="padding: 10px; color: #4CAF50;">Good</td>
+</tr>
+
+<tr>
+<td style="padding: 10px;"><strong>BC</strong></td>
+<td style="padding: 10px; text-align: center;">7</td>
+<td style="padding: 10px; color: #FF9800;">Average</td>
+</tr>
+
+<tr>
+<td style="padding: 10px;"><strong>CC</strong></td>
+<td style="padding: 10px; text-align: center;">6</td>
+<td style="padding: 10px; color: #f57c00;">Below Average</td>
+</tr>
+
+<tr>
+<td style="padding: 10px;"><strong>FF</strong></td>
+<td style="padding: 10px; text-align: center;">0</td>
+<td style="padding: 10px; color: #c62828;">Fail</td>
+</tr>
+
+</table>
+
+</div>
+
+<hr>
+
+<h3>Assign Grade</h3>
+
+<form method="POST" action="/faculty/result/{{ result_info[4] }}">
+
+<div style="background-color: #f0f0f0; padding: 20px; border-radius: 5px;">
+
+<label for="grade" style="font-weight: bold; display: block; margin-bottom: 5px;">
+    Select Grade:
+</label>
+<select name="grade" id="grade" required style="width: 100%; padding: 12px; margin-bottom: 10px; box-sizing: border-box; font-size: 14px;">
+    <option value="">-- Select Grade --</option>
+    <option value="AA">AA - Excellent (10 points)</option>
+    <option value="AB">AB - Very Good (9 points)</option>
+    <option value="BB">BB - Good (8 points)</option>
+    <option value="BC">BC - Average (7 points)</option>
+    <option value="CC">CC - Below Average (6 points)</option>
+    <option value="FF">FF - Fail (0 points)</option>
+</select>
+
+<div id="gradeInfo" style="background-color: #e3f2fd; padding: 10px; border-radius: 5px; display: none;">
+    <p id="gradeText" style="margin: 0;"></p>
+</div>
+
+</div>
+
+<br>
+
+<div style="text-align: center;">
+    <button type="submit" style="padding: 12px 40px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; margin-right: 10px;">
+        ✓ Save Grade
+    </button>
+    
+    <button type="button" onclick="history.back()" style="padding: 12px 40px; background-color: #f44336; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold;">
+        ✕ Cancel
+    </button>
+</div>
+
+<!-- Pass sem_course_id directly in the form action or as hidden input -->
+<input type="hidden" name="sem_course_id" value="{{ sem_course_id }}">
+
+</form>
+
+<script>
+
+const gradeInfo = {
+    'AA': { points: 10, performance: 'Excellent' },
+    'AB': { points: 9, performance: 'Very Good' },
+    'BB': { points: 8, performance: 'Good' },
+    'BC': { points: 7, performance: 'Average' },
+    'CC': { points: 6, performance: 'Below Average' },
+    'FF': { points: 0, performance: 'Fail' }
+};
+
+document.getElementById("grade").addEventListener("change", function() {
+    var grade = this.value;
+    var info = document.getElementById("gradeInfo");
+    var text = document.getElementById("gradeText");
+    
+    if (grade && gradeInfo[grade]) {
+        text.innerHTML = "<strong>" + grade + "</strong> - " + gradeInfo[grade].performance + " (" + gradeInfo[grade].points + " points)";
+        info.style.display = "block";
+    } else {
+        info.style.display = "none";
+    }
+});
+
+</script>
+
+{% endblock %}

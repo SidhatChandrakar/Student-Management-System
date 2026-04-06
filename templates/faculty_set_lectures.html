@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>Set Total Lectures for Course</h2>
+
+<hr>
+
+<div style="background-color: #f9f9f9; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
+    <h3 style="margin-top: 0;">{{ course[1] }}</h3>
+    <p style="margin: 5px 0;">
+        <strong>Course Code:</strong> {{ course[0] }}
+    </p>
+    <p style="margin: 5px 0; font-size: 14px; color: #666;">
+        {% if current_total > 0 %}
+            Current Total Lectures: <strong>{{ current_total }}</strong>
+        {% else %}
+            No lectures set yet
+        {% endif %}
+    </p>
+</div>
+
+<div style="background-color: #fff3e0; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+    <p style="margin: 0; color: #666;">
+        <strong>ℹ️ Note:</strong> This is the total number of lectures/classes held in this session for this course. 
+        Students' attendance percentage will be calculated based on this total.
+    </p>
+</div>
+
+<form method="POST" action="/faculty/course/{{ sem_course_id }}/set-lectures">
+
+<div style="background-color: #f0f0f0; padding: 20px; border-radius: 5px; max-width: 500px;">
+
+<label for="total_lectures" style="font-weight: bold; display: block; margin-bottom: 10px;">
+    Total Lectures/Classes Held in This Session:
+</label>
+<input type="number" name="total_lectures" id="total_lectures" required min="1" max="200" value="{{ current_total }}" style="width: 100%; padding: 12px; margin-bottom: 20px; box-sizing: border-box; font-size: 16px;"><br>
+
+<div style="background-color: #e3f2fd; padding: 10px; border-radius: 5px; margin-bottom: 20px;">
+    <p id="preview" style="margin: 0; color: #1976d2;">
+        <strong>Example:</strong> If you set 50 lectures, and a student was present in 40 lectures, their attendance will be 80%.
+    </p>
+</div>
+
+</div>
+
+<br>
+
+<div style="text-align: center;">
+    <button type="submit" style="padding: 12px 40px; background-color: #FF9800; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; margin-right: 10px;">
+        ✓ Set Lectures
+    </button>
+    
+    <a href="/faculty/dashboard"><button type="button" style="padding: 12px 40px; background-color: #f44336; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold;">
+        ✕ Cancel
+    </button></a>
+</div>
+
+</form>
+
+<script>
+document.getElementById("total_lectures").addEventListener("input", function() {
+    var total = this.value;
+    if (total) {
+        document.getElementById("preview").innerHTML = "<strong>Example:</strong> If you set " + total + " lectures, and a student was present in " + Math.ceil(total * 0.8) + " lectures, their attendance will be 80%.";
+    }
+});
+</script>
+
+{% endblock %}

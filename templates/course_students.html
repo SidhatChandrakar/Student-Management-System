@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>Enrolled Students</h2>
+
+<table border="1">
+
+<tr>
+<th>Student Name</th>
+<th>Attendance</th>
+<th>Result</th>
+</tr>
+
+{% for s in students %}
+
+<tr>
+
+<td>{{s[1]}}</td>
+
+<td>
+<a href="/faculty/attendance/{{s[0]}}">
+Mark Attendance
+</a>
+</td>
+
+<td>
+<a href="/faculty/result/{{s[0]}}">
+Upload Result
+</a>
+</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+{% endblock %}

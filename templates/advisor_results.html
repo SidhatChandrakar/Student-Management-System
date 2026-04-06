@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>Student Results & Grades</h2>
+
+<hr>
+
+{% if results %}
+
+<table border="1" style="width: 100%;">
+
+<tr style="background-color: #f0f0f0;">
+<th>Student ID</th>
+<th>Student Name</th>
+<th>Course Code</th>
+<th>Course Name</th>
+<th>Marks Obtained</th>
+<th>Total Marks</th>
+<th>Grade</th>
+</tr>
+
+{% for result in results %}
+
+<tr>
+<td>{{ result[1] }}</td>
+<td>{{ result[0] }}</td>
+<td>{{ result[3] }}</td>
+<td>{{ result[2] }}</td>
+<td>{{ result[4] }}</td>
+<td>{{ result[5] }}</td>
+<td><strong>{{ result[6] }}</strong></td>
+</tr>
+
+{% endfor %}
+
+</table>
+
+{% else %}
+
+<p style="color: #999; font-style: italic;">No results found.</p>
+
+{% endif %}
+
+<br>
+
+<a href="/advisor/dashboard"><button>Back to Dashboard</button></a>
+
+{% endblock %}

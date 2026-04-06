@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>Mark Attendance - {{ course[1] }}</h2>
+
+<hr>
+
+<div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+    <p style="margin: 5px 0;">
+        <strong>Course Code:</strong> {{ course[0] }}
+    </p>
+    <p style="margin: 5px 0;">
+        <strong>Total Lectures in Session:</strong> <span style="background-color: #e3f2fd; padding: 5px 10px; border-radius: 5px; font-weight: bold;">{{ total_lectures }}</span>
+    </p>
+    <p style="margin: 5px 0;">
+        <strong>Total Students:</strong> {{ students|length }}
+    </p>
+</div>
+
+<div style="background-color: #e8f5e9; padding: 15px; border-radius: 5px; margin-bottom: 20px; border-left: 4px solid #4CAF50;">
+    <p style="margin: 0; font-size: 14px;">
+        <strong>ℹ️ How it works:</strong> For each student, enter the number of lectures they were <strong>present</strong> for. 
+        The percentage will be automatically calculated.
+    </p>
+</div>
+
+<form method="POST" action="/faculty/course/{{ sem_course_id }}/attendance">
+
+{% if students %}
+
+<div style="overflow-x: auto;">
+
+<table border="1" style="width: 100%; border-collapse: collapse;">
+
+<tr style="background-color: #f0f0f0; font-weight: bold;">
+<th style="padding: 10px;">Student ID</th>
+<th style="padding: 10px;">Name</th>
+<th style="padding: 10px;">Email</th>
+<th style="padding: 10px;">Lectures Present (out of {{ total_lectures }})</th>
+<th style="padding: 10px;">Attendance %</th>
+</tr>
+
+{% for s in students %}
+
+<tr>
+<td style="padding: 10px;">{{ s[1] }}</td>
+<td style="padding: 10px;">{{ s[2] }}</td>
+<td style="padding: 10px; font-size: 12px;">{{ s[3] }}</td>
+<td style="padding: 10px;">
+    <input type="number" name="present_{{ s[0] }}" min="0" max="{{ total_lectures }}" value="{{ s[4] }}" data-total="{{ total_lectures }}" onchange="updatePercentage(this)" style="width: 100%; padding: 8px; box-sizing: border-box; font-size: 14px;">
+</td>
+<td style="padding: 10px;">
+    {% set percentage = (s[4] * 100 / total_lectures)|int %}
+    {% if percentage >= 75 %}
+        <span class="percentage" style="font-weight: bold; color: #2e7d32;">{{ percentage }}%</span>
+    {% elif percentage >= 60 %}
+        <span class="percentage" style="font-weight: bold; color: #f57c00;">{{ percentage }}%</span>
+    {% else %}
+        <span class="percentage" style="font-weight: bold; color: #c62828;">{{ percentage }}%</span>
+    {% endif %}
+</td>
+</tr>
+
+{% endfor %}
+
+</table>
+
+</div>
+
+{% else %}
+
+<p style="color: #999; font-style: italic; text-align: center;">No active students in this course.</p>
+
+{% endif %}
+
+<br>
+
+<div style="text-align: center;">
+    <button type="submit" style="padding: 12px 40px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; margin-right: 10px;">
+        ✓ Save Attendance
+    </button>
+    
+    <a href="/faculty/course/{{ sem_course_id }}"><button type="button" style="padding: 12px 40px; background-color: #f44336; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold;">
+        ✕ Cancel
+    </button></a>
+</div>
+
+</form>
+
+<script>
+
+function updatePercentage(input) {
+    var present = parseInt(input.value) || 0;
+    var total = parseInt(input.getAttribute("data-total")) || 1;
+    var percentage = Math.round((present * 100) / total);
+    
+    var row = input.closest("tr");
+    var percentageCell = row.querySelector(".percentage");
+    
+    if (percentage >= 75) {
+        percentageCell.style.color = "#2e7d32";
+    } else if (percentage >= 60) {
+        percentageCell.style.color = "#f57c00";
+    } else {
+        percentageCell.style.color = "#c62828";
+    }
+    
+    percentageCell.textContent = percentage + "%";
+}
+
+</script>
+
+{% endblock %}

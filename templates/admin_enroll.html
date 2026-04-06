@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin: 20px 0;">
+
+<!-- ==================== LEFT SECTION: ENROLLMENT ==================== -->
+
+<div>
+
+<h2>Student Enrollment</h2>
+
+<hr>
+
+<form method="POST" action="/admin/enroll" style="max-width: 100%;">
+
+<!-- PERSONAL DETAILS SECTION -->
+
+<fieldset style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+<legend style="padding: 0 10px; font-weight: bold; font-size: 14px;">PERSONAL DETAILS</legend>
+
+Full Name<br>
+<input type="text" name="full_name" required style="width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box;"><br>
+
+Email<br>
+<input type="email" name="email" required style="width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box;"><br>
+
+Phone<br>
+<input type="text" name="phone" style="width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box;"><br>
+
+Gender<br>
+<select name="gender" required style="width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box;">
+    <option value="">Select Gender</option>
+    <option value="Male">Male</option>
+    <option value="Female">Female</option>
+    <option value="Other">Other</option>
+</select>
+<br>
+
+Date of Birth<br>
+<input type="date" name="dob" required style="width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box;"><br>
+
+Address<br>
+<textarea name="address" style="width: 100%; padding: 8px; margin-bottom: 10px; height: 60px; box-sizing: border-box;"></textarea><br>
+
+Password<br>
+<input type="password" name="password" required style="width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box;"><br>
+
+</fieldset>
+
+<!-- EDUCATIONAL DETAILS SECTION -->
+
+<fieldset style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+<legend style="padding: 0 10px; font-weight: bold; font-size: 14px;">EDUCATIONAL DETAILS</legend>
+
+<h4 style="margin-top: 0;">High School</h4>
+
+School Name<br>
+<input type="text" name="high_school_name" required style="width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box;"><br>
+
+Graduation Year<br>
+<input type="number" name="high_school_year" min="1990" max="2099" required style="width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box;"><br>
+
+Percentage (%)<br>
+<input type="number" name="high_school_percentage" min="0" max="100" step="0.01" required style="width: 100%; padding: 8px; margin-bottom: 15px; box-sizing: border-box;"><br>
+
+<h4>Higher Secondary</h4>
+
+School/College Name<br>
+<input type="text" name="higher_sec_name" required style="width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box;"><br>
+
+Graduation Year<br>
+<input type="number" name="higher_sec_year" min="1990" max="2099" required style="width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box;"><br>
+
+Percentage (%)<br>
+<input type="number" name="higher_sec_percentage" min="0" max="100" step="0.01" required style="width: 100%; padding: 8px; margin-bottom: 15px; box-sizing: border-box;"><br>
+
+<h4>Undergraduate (UG) - If Applicable (for PG Students)</h4>
+
+University Name<br>
+<input type="text" name="ug_university" placeholder="Leave empty if not applicable" style="width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box;"><br>
+
+Degree<br>
+<input type="text" name="ug_degree" placeholder="e.g., B.Tech, B.Sc, B.E." style="width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box;"><br>
+
+Graduation Year<br>
+<input type="number" name="ug_graduation_year" min="1990" max="2099" style="width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box;"><br>
+
+CGPA<br>
+<input type="number" name="ug_cgpa" min="0" max="10" step="0.01" style="width: 100%; padding: 8px; margin-bottom: 15px; box-sizing: border-box;"><br>
+
+</fieldset>
+
+<!-- DEPARTMENT SECTION -->
+
+<fieldset style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+<legend style="padding: 0 10px; font-weight: bold; font-size: 14px;">DEPARTMENT</legend>
+
+Department<br>
+<select name="department_id" required style="width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box;">
+    <option value="">Select Department</option>
+    {% for dept in departments %}
+        <option value="{{ dept[0] }}">{{ dept[1] }}</option>
+    {% endfor %}
+</select>
+<br>
+
+</fieldset>
+
+<!-- SUBMIT SECTION -->
+
+<div style="text-align: center;">
+    <button type="submit" style="padding: 12px 30px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin-right: 10px;">
+        Enroll Student & Generate PDF
+    </button>
+    
+    <button type="reset" style="padding: 12px 30px; background-color: #f44336; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">
+        Reset Form
+    </button>
+</div>
+
+<br>
+
+</form>
+
+</div>
+
+<!-- ==================== RIGHT SECTION: LOGIN ==================== -->
+
+<div style="background-color: #f9f9f9; padding: 20px; border-radius: 5px; border: 2px solid #2196F3; height: fit-content;">
+
+<h2 style="text-align: center; color: #2196F3;">Already Enrolled?</h2>
+
+<hr>
+
+<h4 style="text-align: center;">Login Here</h4>
+
+<form method="POST" action="/login">
+
+<label for="role" style="font-weight: bold; display: block; margin-bottom: 5px;">Select Role:</label>
+<select name="role" id="role" required onchange="toggleSessionFields()" style="width: 100%; padding: 10px; margin-bottom: 15px; box-sizing: border-box;">
+    <option value="">-- Select Role --</option>
+    <option value="student">Student</option>
+    <option value="faculty">Faculty</option>
+    <option value="advisor">Advisor</option>
+    <option value="admin">Admin</option>
+</select>
+
+<br>
+
+<label for="user_id" style="font-weight: bold; display: block; margin-bottom: 5px;">User ID:</label>
+<input type="text" name="user_id" id="user_id" required placeholder="Enter your ID" style="width: 100%; padding: 10px; margin-bottom: 15px; box-sizing: border-box;"><br>
+
+<label for="password" style="font-weight: bold; display: block; margin-bottom: 5px;">Password:</label>
+<input type="password" name="password" required placeholder="Enter your password" style="width: 100%; padding: 10px; margin-bottom: 15px; box-sizing: border-box;"><br>
+
+<!-- Session and Year fields (only for students) -->
+<div id="semester_fields" style="display: none;">
+
+    <label for="session" style="font-weight: bold; display: block; margin-bottom: 5px;">Session:</label>
+    <select name="session" id="session" style="width: 100%; padding: 10px; margin-bottom: 15px; box-sizing: border-box;">
+        <option value="Winter">Winter</option>
+        <option value="Summer">Summer</option>
+    </select>
+
+    <label for="year" style="font-weight: bold; display: block; margin-bottom: 5px;">Year:</label>
+    <input type="number" name="year" id="year" value="2025" style="width: 100%; padding: 10px; margin-bottom: 15px; box-sizing: border-box;"><br>
+
+</div>
+
+<div style="text-align: center;">
+    <button type="submit" style="padding: 12px 30px; background-color: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; width: 100%;">
+        Login
+    </button>
+</div>
+
+{% if error %}
+<div style="background-color: #ffcdd2; color: #c62828; padding: 10px; margin-top: 15px; border-radius: 5px; text-align: center;">
+    <strong>Error:</strong> {{ error }}
+</div>
+{% endif %}
+
+</form>
+
+<hr style="margin-top: 20px;">
+
+<p style="text-align: center; font-size: 12px; color: #666;">
+    <strong>Admin Demo:</strong><br>
+    ID: admin | Password: admin123
+</p>
+
+</div>
+
+</div>
+
+<script>
+
+function toggleSessionFields() {
+    var role = document.getElementById("role").value;
+    var semesterFields = document.getElementById("semester_fields");
+    
+    if(role === "student"){
+        semesterFields.style.display = "block";
+    } else {
+        semesterFields.style.display = "none";
+    }
+}
+
+</script>
+
+{% endblock %}
