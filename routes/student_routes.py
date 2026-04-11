@@ -103,13 +103,19 @@ def dashboard():
     registered = cursor.fetchall()
     registered_dict = {r[0]: r[1] for r in registered}
 
-    # Student's course details with attendance, grades, and advisor approval status
+    # Student's course details with attendance percentage and grades
     cursor.execute("""
     SELECT
         c.course_name,
         c.course_code,
         r.status,
-        COUNT(a.attendance_id) as attendance_count,
+        COALESCE(att.total_lectures, 0) as total_lectures,
+        COALESCE(att.present_count, 0) as present_count,
+        CASE
+            WHEN COALESCE(att.total_lectures, 0) > 0
+            THEN ROUND(att.present_count * 100 / att.total_lectures, 1)
+            ELSE 0
+        END as attendance_pct,
         COALESCE(res.grade, 'N/A') as grade,
         f.faculty_name,
         r.registration_date
@@ -117,11 +123,15 @@ def dashboard():
     JOIN semester_courses sc ON r.sem_course_id = sc.sem_course_id
     JOIN courses c ON sc.course_id = c.course_id
     JOIN faculties f ON sc.faculty_id = f.faculty_id
-    LEFT JOIN attendance a ON r.registration_id = a.registration_id
+    LEFT JOIN (
+        SELECT registration_id,
+               COUNT(DISTINCT att_date) as total_lectures,
+               SUM(CASE WHEN status = 'Present' THEN 1 ELSE 0 END) as present_count
+        FROM attendance
+        GROUP BY registration_id
+    ) att ON r.registration_id = att.registration_id
     LEFT JOIN results res ON r.registration_id = res.registration_id
     WHERE r.student_id = :sid
-    GROUP BY c.course_name, c.course_code, r.status, f.faculty_name, 
-             r.registration_date, res.grade
     ORDER BY r.registration_date DESC
     """, {"sid": student_id})
 

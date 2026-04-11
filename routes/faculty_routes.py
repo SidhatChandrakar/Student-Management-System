@@ -1,3 +1,4 @@
+from datetime import date, datetime
 from flask import Blueprint, render_template, request, redirect, session
 from db import get_connection
 
@@ -99,9 +100,9 @@ def view_course_students(sem_course_id):
 
 
 
-@faculty_bp.route("/faculty/course/<sem_course_id>/set-lectures", methods=["GET", "POST"])
-def set_course_lectures(sem_course_id):
-    """Set total lectures for the course"""
+@faculty_bp.route("/faculty/course/<int:sem_course_id>/attendance")
+def attendance_overview(sem_course_id):
+    """Show attendance date picker and history for a course"""
 
     if session.get("role") != "faculty":
         return "Unauthorized", 403
@@ -111,124 +112,17 @@ def set_course_lectures(sem_course_id):
     conn = get_connection()
     cursor = conn.cursor()
 
-    # Get course details
+    # Get course details including session dates
     cursor.execute("""
-    SELECT c.course_code, c.course_name, sc.faculty_id
+    SELECT c.course_code, c.course_name, sc.faculty_id,
+           TO_CHAR(s.start_dt, 'YYYY-MM-DD') as start_dt,
+           TO_CHAR(s.end_dt, 'YYYY-MM-DD') as end_dt
     FROM semester_courses sc
     JOIN courses c ON sc.course_id = c.course_id
+    JOIN semesters s ON sc.semester_id = s.semester_id
     WHERE sc.sem_course_id = :cid
     """, {"cid": sem_course_id})
-    
-    course_info = cursor.fetchone()
 
-    if not course_info or course_info[2] != int(faculty_id):
-        cursor.close()
-        conn.close()
-        return "Unauthorized", 403
-
-    # Get current total lectures (stored in a simple way - we'll use max count from attendance)
-    cursor.execute("""
-    SELECT COALESCE(MAX(total_lectures), 0) as total_lectures
-    FROM (
-        SELECT COUNT(DISTINCT att_date) as total_lectures
-        FROM attendance a
-        JOIN registration r ON a.registration_id = r.registration_id
-        WHERE r.sem_course_id = :cid
-    )
-    """, {"cid": sem_course_id})
-    
-    result = cursor.fetchone()
-    current_total = result[0] if result else 0
-
-    if request.method == "GET":
-        cursor.close()
-        conn.close()
-        
-        return render_template(
-            "faculty_set_lectures.html",
-            course=course_info,
-            sem_course_id=sem_course_id,
-            current_total=current_total
-        )
-
-    elif request.method == "POST":
-        total_lectures = request.form.get("total_lectures", 0)
-        
-        try:
-            total_lectures = int(total_lectures)
-        except:
-            cursor.close()
-            conn.close()
-            return "Invalid total lectures", 400
-
-        if total_lectures <= 0:
-            cursor.close()
-            conn.close()
-            return "Total lectures must be greater than 0", 400
-
-        # Store total lectures in a temporary way by setting attendance records
-        # First, clear old records
-        cursor.execute("""
-        DELETE FROM attendance
-        WHERE registration_id IN (
-            SELECT registration_id FROM registration WHERE sem_course_id = :cid
-        )
-        """, {"cid": sem_course_id})
-
-        # Create attendance records for all students as "Absent" initially
-        cursor.execute("""
-        SELECT registration_id FROM registration
-        WHERE sem_course_id = :cid AND status = 'Active'
-        """, {"cid": sem_course_id})
-
-        registrations = cursor.fetchall()
-
-        for reg in registrations:
-            registration_id = reg[0]
-            
-            # Create dummy absence records for each lecture
-            for i in range(total_lectures):
-                cursor.execute("""
-                    INSERT INTO attendance
-                    (registration_id, att_date, status, marked_by)
-                    VALUES (:rid, SYSDATE - :day, 'Absent', :fid)
-                """, {
-                    "rid": registration_id,
-                    "day": total_lectures - i,
-                    "fid": faculty_id
-                })
-
-        conn.commit()
-        cursor.close()
-        conn.close()
-
-        return render_template(
-            "faculty_lectures_set_success.html",
-            course=course_info,
-            sem_course_id=sem_course_id,
-            total_lectures=total_lectures
-        )
-
-@faculty_bp.route("/faculty/course/<sem_course_id>/attendance", methods=["GET", "POST"])
-def manage_course_attendance(sem_course_id):
-    """Manage attendance for students (update present count)"""
-
-    if session.get("role") != "faculty":
-        return "Unauthorized", 403
-
-    faculty_id = session["faculty_id"]
-
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    # Get course details
-    cursor.execute("""
-    SELECT c.course_code, c.course_name, sc.faculty_id
-    FROM semester_courses sc
-    JOIN courses c ON sc.course_id = c.course_id
-    WHERE sc.sem_course_id = :cid
-    """, {"cid": sem_course_id})
-    
     course = cursor.fetchone()
 
     if not course or course[2] != int(faculty_id):
@@ -236,41 +130,81 @@ def manage_course_attendance(sem_course_id):
         conn.close()
         return "Unauthorized", 403
 
-    # Get total lectures for this course
+    # Get all dates already marked for this course with present/total counts
     cursor.execute("""
-    SELECT COALESCE(COUNT(DISTINCT att_date), 0) as total_lectures
+    SELECT TO_CHAR(a.att_date, 'YYYY-MM-DD') as att_date,
+           COUNT(*) as total_students,
+           SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) as present_count
     FROM attendance a
     JOIN registration r ON a.registration_id = r.registration_id
     WHERE r.sem_course_id = :cid
+    GROUP BY a.att_date
+    ORDER BY a.att_date DESC
     """, {"cid": sem_course_id})
-    
-    total_lectures = cursor.fetchone()[0]
 
-    if total_lectures == 0:
+    marked_dates = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    today = date.today().strftime("%Y-%m-%d")
+
+    return render_template(
+        "faculty_attendance_overview.html",
+        course=course,
+        sem_course_id=sem_course_id,
+        marked_dates=marked_dates,
+        today=today
+    )
+
+
+@faculty_bp.route("/faculty/course/<int:sem_course_id>/attendance/<att_date>", methods=["GET", "POST"])
+def mark_daily_attendance(sem_course_id, att_date):
+    """Mark attendance for all students on a specific date"""
+
+    if session.get("role") != "faculty":
+        return "Unauthorized", 403
+
+    faculty_id = session["faculty_id"]
+
+    # Validate date format
+    try:
+        datetime.strptime(att_date, "%Y-%m-%d")
+    except ValueError:
+        return "Invalid date format. Use YYYY-MM-DD.", 400
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    # Get course details and verify faculty ownership
+    cursor.execute("""
+    SELECT c.course_code, c.course_name, sc.faculty_id
+    FROM semester_courses sc
+    JOIN courses c ON sc.course_id = c.course_id
+    WHERE sc.sem_course_id = :cid
+    """, {"cid": sem_course_id})
+
+    course = cursor.fetchone()
+
+    if not course or course[2] != int(faculty_id):
         cursor.close()
         conn.close()
-        return render_template(
-            "faculty_no_lectures_set.html",
-            course=course,
-            sem_course_id=sem_course_id
-        )
+        return "Unauthorized", 403
 
     if request.method == "GET":
-        # Get all active students with their current attendance
+        # Get all active students with their attendance status for this specific date
         cursor.execute("""
-        SELECT
-        r.registration_id,
-        s.student_id,
-        s.full_name,
-        s.email,
-        SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) as present_count
+        SELECT r.registration_id,
+               s.student_id,
+               s.full_name,
+               s.email,
+               COALESCE(a.status, 'Present') as status
         FROM registration r
         JOIN students s ON r.student_id = s.student_id
         LEFT JOIN attendance a ON r.registration_id = a.registration_id
+            AND a.att_date = TO_DATE(:att_date, 'YYYY-MM-DD')
         WHERE r.sem_course_id = :cid AND r.status = 'Active'
-        GROUP BY r.registration_id, s.student_id, s.full_name, s.email
         ORDER BY s.full_name
-        """, {"cid": sem_course_id})
+        """, {"cid": sem_course_id, "att_date": att_date})
 
         students = cursor.fetchall()
         cursor.close()
@@ -281,159 +215,48 @@ def manage_course_attendance(sem_course_id):
             course=course,
             students=students,
             sem_course_id=sem_course_id,
-            total_lectures=total_lectures
+            att_date=att_date
         )
 
     elif request.method == "POST":
-        success_count = 0
-
-        # Get all active students in this course
+        # Get all active students for this course
         cursor.execute("""
-        SELECT r.registration_id, s.student_id
+        SELECT r.registration_id
         FROM registration r
-        JOIN students s ON r.student_id = s.student_id
         WHERE r.sem_course_id = :cid AND r.status = 'Active'
         """, {"cid": sem_course_id})
 
-        registrations = cursor.fetchall()
+        registrations = [row[0] for row in cursor.fetchall()]
 
-        for reg in registrations:
-            registration_id = reg[0]
-            
-            # Get present count for this student from form
-            present_count_key = f"present_{registration_id}"
-            present_count = request.form.get(present_count_key, 0)
-            
-            try:
-                present_count = int(present_count)
-            except:
-                continue
-
-            if present_count > total_lectures or present_count < 0:
-                continue
-
-            # Update attendance records
-            # First, set all to Absent
-            cursor.execute("""
-                UPDATE attendance
-                SET status = 'Absent'
-                WHERE registration_id = :rid
-            """, {"rid": registration_id})
-
-            # Then, update first N records to Present
-            if present_count > 0:
-                cursor.execute("""
-                    UPDATE attendance
-                    SET status = 'Present'
-                    WHERE registration_id = :rid
-                    AND rownum <= :count
-                """, {"rid": registration_id, "count": present_count})
-
-            success_count += 1
-
-        conn.commit()
-        cursor.close()
-        conn.close()
-
-        return render_template(
-            "faculty_attendance_success.html",
-            course=course,
-            sem_course_id=sem_course_id,
-            total_lectures=total_lectures,
-            success_count=success_count
-        )
-
-@faculty_bp.route("/faculty/attendance/<registration_id>", methods=["GET", "POST"])
-def manage_attendance(registration_id):
-
-    if session.get("role") != "faculty":
-        return "Unauthorized", 403
-
-    faculty_id = session["faculty_id"]
-
-    if request.method == "GET":
-        # Show attendance form
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        # Get student and course info
-        cursor.execute("""
-        SELECT 
-            s.student_id,
-            s.full_name,
-            c.course_code,
-            c.course_name,
-            r.registration_id,
-            COALESCE(att.total_lectures, 0) as total_lectures,
-            COALESCE(att.present_count, 0) as present_count
-        FROM registration r
-        JOIN students s ON r.student_id = s.student_id
-        JOIN semester_courses sc ON r.sem_course_id = sc.sem_course_id
-        JOIN courses c ON sc.course_id = c.course_id
-        LEFT JOIN (
-            SELECT registration_id, COUNT(*) as total_lectures, 
-                    SUM(CASE WHEN status = 'Present' THEN 1 ELSE 0 END) as present_count
-            FROM attendance
-            GROUP BY registration_id
-        ) att ON r.registration_id = att.registration_id
-        WHERE r.registration_id = :rid AND sc.faculty_id = :fid
-        """, {"rid": registration_id, "fid": faculty_id})
-
-        attendance_info = cursor.fetchone()
-        cursor.close()
-        conn.close()
-
-        if not attendance_info:
-            return "Unauthorized", 403
-
-        return render_template(
-            "faculty_attendance.html",
-            attendance_info=attendance_info,
-            registration_id=registration_id
-        )
-
-    elif request.method == "POST":
-        # Save attendance
-        total_lectures = request.form.get("total_lectures", 0)
-        present_count = request.form.get("present_count", 0)
-
+        # Students whose checkbox was checked (present)
         try:
-            total_lectures = int(total_lectures)
-            present_count = int(present_count)
-        except:
-            return "Invalid input", 400
+            present_ids = set(int(x) for x in request.form.getlist("present"))
+        except (ValueError, TypeError):
+            cursor.close()
+            conn.close()
+            return "Invalid form data.", 400
 
-        if present_count > total_lectures:
-            return "Present count cannot be greater than total lectures", 400
+        for reg_id in registrations:
+            status = "Present" if reg_id in present_ids else "Absent"
 
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        # Delete old attendance records for this registration
-        cursor.execute("""
+            # Delete any existing record(s) for this student on this date
+            cursor.execute("""
             DELETE FROM attendance
             WHERE registration_id = :rid
-        """, {"rid": registration_id})
+              AND att_date = TO_DATE(:att_date, 'YYYY-MM-DD')
+            """, {"rid": reg_id, "att_date": att_date})
 
-        # Insert new attendance records
-        for i in range(total_lectures):
-            status = "Present" if i < present_count else "Absent"
+            # Insert fresh record
             cursor.execute("""
-                INSERT INTO attendance
-                (registration_id, att_date, status, marked_by)
-                VALUES (:rid, SYSDATE - :day, :status, :fid)
-            """, {
-                "rid": registration_id,
-                "day": total_lectures - i,
-                "status": status,
-                "fid": faculty_id
-            })
+            INSERT INTO attendance (registration_id, att_date, status, marked_by)
+            VALUES (:rid, TO_DATE(:att_date, 'YYYY-MM-DD'), :status, :fid)
+            """, {"rid": reg_id, "att_date": att_date, "status": status, "fid": faculty_id})
 
         conn.commit()
         cursor.close()
         conn.close()
 
-        return redirect(f"/faculty/course/{request.form.get('sem_course_id')}")
+        return redirect(f"/faculty/course/{sem_course_id}/attendance")
 
 
 @faculty_bp.route("/faculty/result/<int:registration_id>", methods=["GET", "POST"])
