@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>Attendance – {{ course[1] }}</h2>
+
+<hr>
+
+<div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+    <p style="margin: 5px 0;"><strong>Course Code:</strong> {{ course[0] }}</p>
+    {% if course[3] %}
+    <p style="margin: 5px 0;">
+        <strong>Session Period:</strong> {{ course[3] }} to {{ course[4] }}
+    </p>
+    {% endif %}
+    <p style="margin: 5px 0;"><strong>Classes Held:</strong> {{ marked_dates|length }}</p>
+</div>
+
+<div style="background-color: #e8f5e9; padding: 15px; border-radius: 5px; margin-bottom: 25px; border-left: 4px solid #4CAF50;">
+    <p style="margin: 0; font-size: 14px;">
+        <strong>ℹ️ How it works:</strong> Select a date below to mark attendance for that day.
+        All students appear checked (present) by default — simply uncheck any student who was absent.
+    </p>
+</div>
+
+<h3>Mark Attendance for a Date</h3>
+
+<form method="GET" action="" id="dateForm">
+<div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap; margin-bottom: 25px;">
+    <input type="date"
+           id="selectedDate"
+           name="go_date"
+           value="{{ today }}"
+           {% if course[3] %}min="{{ course[3] }}" max="{{ course[4] }}"{% endif %}
+           style="padding: 10px; font-size: 16px; border: 1px solid #ccc; border-radius: 5px;">
+    <button type="button"
+            onclick="goToDate()"
+            style="padding: 10px 25px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 15px; font-weight: bold;">
+        📋 Open Attendance Sheet
+    </button>
+</div>
+</form>
+
+<hr>
+
+<h3>Previously Marked Dates</h3>
+
+{% if marked_dates %}
+
+<div style="overflow-x: auto;">
+<table border="1" style="width: 100%; border-collapse: collapse;">
+
+<tr style="background-color: #f0f0f0; font-weight: bold;">
+    <th style="padding: 10px;">Date</th>
+    <th style="padding: 10px;">Students Present</th>
+    <th style="padding: 10px;">Total Students</th>
+    <th style="padding: 10px;">Present %</th>
+    <th style="padding: 10px;">Action</th>
+</tr>
+
+{% for d in marked_dates %}
+{% set pct = (d[2] * 100 / d[1])|int if d[1] > 0 else 0 %}
+<tr>
+    <td style="padding: 10px;">{{ d[0] }}</td>
+    <td style="padding: 10px; text-align: center;">{{ d[2] }}</td>
+    <td style="padding: 10px; text-align: center;">{{ d[1] }}</td>
+    <td style="padding: 10px; text-align: center;">
+        {% if pct >= 75 %}
+            <span style="color: #2e7d32; font-weight: bold;">{{ pct }}%</span>
+        {% elif pct >= 60 %}
+            <span style="color: #f57c00; font-weight: bold;">{{ pct }}%</span>
+        {% else %}
+            <span style="color: #c62828; font-weight: bold;">{{ pct }}%</span>
+        {% endif %}
+    </td>
+    <td style="padding: 10px; text-align: center;">
+        <a href="/faculty/course/{{ sem_course_id }}/attendance/{{ d[0] }}"
+           style="color: #2196F3; text-decoration: none; font-weight: bold;">
+            Edit
+        </a>
+    </td>
+</tr>
+{% endfor %}
+
+</table>
+</div>
+
+{% else %}
+
+<p style="color: #999; font-style: italic; text-align: center;">
+    No attendance marked yet. Select a date above to get started.
+</p>
+
+{% endif %}
+
+<br>
+
+<a href="/faculty/course/{{ sem_course_id }}">
+    <button style="padding: 10px 20px; background-color: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer;">
+        ← Back to Course
+    </button>
+</a>
+
+<script>
+function goToDate() {
+    var d = document.getElementById("selectedDate").value;
+    if (!d) {
+        alert("Please select a date.");
+        return;
+    }
+    window.location.href = "/faculty/course/{{ sem_course_id }}/attendance/" + d;
+}
+</script>
+
+{% endblock %}
